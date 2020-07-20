@@ -4,7 +4,7 @@ use std::mem::replace;
 const MAX_N: usize = 16;
 
 //Currently seems slow because of counts based optimisation
-pub(crate) fn fannkuch_rayon(n: usize) -> (usize, usize) {
+pub fn fannkuchh_rayon(n: usize) -> (usize, usize) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 

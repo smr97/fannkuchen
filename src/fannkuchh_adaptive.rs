@@ -1,18 +1,70 @@
 use rayon_try_fold::prelude::*;
-use std::mem::replace;
-// This value controls how many blocks the workload is broken up into (as long
-// as the value is less than or equal to the factorial of the argument to this
-// program) in order to allow the blocks to be processed in parallel if
-// possible. PREFERRED_NUMBER_OF_BLOCKS_TO_USE should be some number which
-// divides evenly into all factorials larger than it. It should also be around
-// 2-8 times the amount of threads you want to use in order to create enough
-// blocks to more evenly distribute the workload amongst the threads.
-const PREFERRED_NUMBER_OF_BLOCKS_TO_USE: usize = 1_000_000;
+use std::{cmp::min, mem::replace, ops::Range};
 
 // One greater than the maximum `n` value. Used to size stack arrays.
 const MAX_N: usize = 16;
+const MIN_BLOCKSIZE: usize = 2;
 
-pub(crate) fn fannkuch_adaptive(n: usize) -> (usize, usize) {
+struct PfannkuchhZustand {
+    max_flip_count: usize,
+    checksum: usize,
+    perm_range: Range<usize>,
+    current_permutation: [u8; MAX_N],
+    count: [usize; MAX_N],
+    new: bool,
+}
+
+impl Divisible for PfannkuchhZustand {
+    type Controlled = True;
+    fn should_be_divided(&self) -> bool {
+        self.perm_range.len() > MIN_BLOCKSIZE
+    }
+    fn divide(self) -> (Self, Self) {
+        let (leftr, rightr) = self.perm_range.divide();
+        (
+            PfannkuchhZustand {
+                max_flip_count: self.max_flip_count,
+                checksum: self.checksum,
+                perm_range: leftr,
+                current_permutation: self.current_permutation,
+                count: self.count,
+                new: self.new,
+            },
+            PfannkuchhZustand {
+                max_flip_count: 0,
+                checksum: 0,
+                perm_range: rightr,
+                current_permutation: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                count: [0; MAX_N],
+                new: true,
+            },
+        )
+    }
+    fn divide_at(self, index: usize) -> (Self, Self) {
+        let (leftr, rightr) = self.perm_range.divide_at(index);
+        (
+            PfannkuchhZustand {
+                max_flip_count: self.max_flip_count,
+                checksum: self.checksum,
+                perm_range: leftr,
+                current_permutation: self.current_permutation,
+                count: self.count,
+                new: self.new,
+            },
+            PfannkuchhZustand {
+                max_flip_count: 0,
+                checksum: 0,
+                perm_range: rightr,
+                current_permutation: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                count: [0; MAX_N],
+                new: true,
+            },
+        )
+    }
+}
+
+//Adaptively selects the block size
+pub fn fannkuchh_adaptive(n: usize) -> (usize, usize) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 
@@ -26,62 +78,57 @@ pub(crate) fn fannkuch_adaptive(n: usize) -> (usize, usize) {
         table
     };
 
-    // Determine the block_size to use. If n! is less than
-    // PREFERRED_NUMBER_OF_BLOCKS_TO_USE then just use a single block to prevent
-    // block_size from being set to 0. This also causes smaller values of n to
-    // be computed serially which is faster and uses less resources for small
-    // values of n.
-    let block_size = 1.max(factorial_lookup_table[n] / PREFERRED_NUMBER_OF_BLOCKS_TO_USE);
-    let block_count = factorial_lookup_table[n] / block_size;
-
     // Iterate over each block.
-    (0..block_count)
-        .into_par_iter()
-        .map(|bn| {
-            let initial_permutation_index = bn * block_size;
+    PfannkuchhZustand {
+        max_flip_count: 0,
+        checksum: 0,
+        perm_range: (0..factorial_lookup_table[n]),
+        current_permutation: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        new: true,
+        count: [0; MAX_N],
+    }
+    .work(
+        |state| state.perm_range.len() == 0,
+        |state, limit| {
+            let right_end = min(state.perm_range.end, state.perm_range.start + limit);
+            let dieser_range = state.perm_range.start..right_end;
+            let initial_permutation_index = dieser_range.start;
 
-            let mut count: [usize; MAX_N] = [0; MAX_N];
-            let mut current_permutation: [u8; MAX_N] =
-                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-
-            // Initialize count and current_permutation.
-            {
+            // Initialize count and current_permutation only if this state is fresh.
+            if state.new == true {
                 let mut temp_permutation: [u8; MAX_N] = [0; MAX_N];
                 let mut permutation_index = initial_permutation_index;
                 for i in (1..n).rev() {
                     let f = factorial_lookup_table[i];
                     let d = permutation_index / f;
 
-                    count[i] = d;
+                    state.count[i] = d;
 
                     // Rotate the permutation left by d places. This is faster
                     // than using slice::rotate_left.
-                    temp_permutation[0..=i - d].copy_from_slice(&current_permutation[d..=i]);
-                    temp_permutation[i - d + 1..=i].copy_from_slice(&current_permutation[..d]);
-                    current_permutation = temp_permutation;
+                    temp_permutation[0..=i - d].copy_from_slice(&state.current_permutation[d..=i]);
+                    temp_permutation[i - d + 1..=i]
+                        .copy_from_slice(&state.current_permutation[..d]);
+                    state.current_permutation = temp_permutation;
 
                     permutation_index = permutation_index % f;
                 }
             }
 
-            let mut max_flip_count = 0;
-            let mut checksum = 0;
-
             // Iterate over each permutation in the block.
-            let last_permutation_index = initial_permutation_index + block_size;
-            for permutation_index in initial_permutation_index..last_permutation_index {
+            for permutation_index in dieser_range {
                 // If the first value in the current_permutation is not 1 (0)
                 // then we will need to do at least one flip for the
                 // current_permutation.
-                if current_permutation[0] > 0 {
+                if state.current_permutation[0] > 0 {
                     // Make a copy of current_permutation[] to work on.
-                    let mut temp_permutation = current_permutation;
+                    let mut temp_permutation = state.current_permutation;
 
                     let mut flip_count: usize = 1;
 
                     // Flip temp_permutation until the element at the
                     // first_value index is 1 (0).
-                    let mut first_value = current_permutation[0] as usize & 0xF;
+                    let mut first_value = state.current_permutation[0] as usize & 0xF;
                     while temp_permutation[first_value] > 0 {
                         // Record the new_first_value and restore the old
                         // first_value at its new flipped position.
@@ -112,40 +159,41 @@ pub(crate) fn fannkuch_adaptive(n: usize) -> (usize, usize) {
 
                     // Update the checksum.
                     if permutation_index % 2 == 0 {
-                        checksum += flip_count;
+                        state.checksum += flip_count;
                     } else {
-                        checksum -= flip_count;
+                        state.checksum -= flip_count;
                     }
 
                     // Update max_flip_count if necessary.
-                    max_flip_count = max_flip_count.max(flip_count);
+                    state.max_flip_count = state.max_flip_count.max(flip_count);
                 }
 
                 // Generate the next permutation.
-                current_permutation.swap(0, 1);
-                let mut first_value = current_permutation[0];
+                state.current_permutation.swap(0, 1);
+                let mut first_value = state.current_permutation[0];
                 for i in 1..MAX_N - 2 {
-                    count[i] += 1;
-                    if count[i] <= i {
+                    state.count[i] += 1;
+                    if state.count[i] <= i {
                         break;
                     }
-                    count[i] = 0;
+                    state.count[i] = 0;
 
-                    let new_first_value = current_permutation[1];
+                    let new_first_value = state.current_permutation[1];
 
                     for j in 0..i + 1 {
-                        current_permutation[j] = current_permutation[j + 1];
+                        state.current_permutation[j] = state.current_permutation[j + 1];
                     }
 
-                    current_permutation[i + 1] = first_value;
+                    state.current_permutation[i + 1] = first_value;
                     first_value = new_first_value;
                 }
             }
-            (checksum, max_flip_count)
-        })
-        .adaptive()
-        .reduce(
-            || (0, 0),
-            |(cs1, mf1), (cs2, mf2)| (cs1 + cs2, mf1.max(mf2)),
-        )
+            // "Consume" the part of range that has been worked upon.
+            state.perm_range.start = right_end;
+            state.new = false;
+        },
+    )
+    .micro_block_sizes(100, 1_000) //TODO tune this by measuring startup cost vs total time.
+    .map(|zustand| (zustand.checksum, zustand.max_flip_count))
+    .reduce(|| (0, 0), |l, r| (l.0 + r.0, l.1.max(r.1)))
 }

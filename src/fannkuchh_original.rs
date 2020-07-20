@@ -7,7 +7,6 @@ use std::mem::replace;
 // divides evenly into all factorials larger than it. It should also be around
 // 2-8 times the amount of threads you want to use in order to create enough
 // blocks to more evenly distribute the workload amongst the threads.
-const PREFERRED_NUMBER_OF_BLOCKS_TO_USE: usize = 12;
 
 // One greater than the maximum `n` value. Used to size stack arrays.
 const MAX_N: usize = 16;
@@ -16,7 +15,7 @@ const MAX_N: usize = 16;
 // threads steal blocks of work.
 // Within a block, it is much easier to generate next permutation given the current permutation,
 // owing to the "counts" optimisation.
-pub(crate) fn fannkuch_fastest(n: usize) -> (usize, usize) {
+pub fn fannkuchh_fastest(n: usize, num_blocks: usize) -> (usize, usize) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 
@@ -35,7 +34,7 @@ pub(crate) fn fannkuch_fastest(n: usize) -> (usize, usize) {
     // block_size from being set to 0. This also causes smaller values of n to
     // be computed serially which is faster and uses less resources for small
     // values of n.
-    let block_size = 1.max(factorial_lookup_table[n] / PREFERRED_NUMBER_OF_BLOCKS_TO_USE);
+    let block_size = 1.max(factorial_lookup_table[n] / num_blocks);
     let block_count = factorial_lookup_table[n] / block_size;
 
     // Iterate over each block.

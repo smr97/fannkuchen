@@ -4,8 +4,25 @@ version = "0.1.0"
 authors = ["smr97 <saurabh.mraje@gmail.com>"]
 edition = "2018"
 
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+logs = ["rayon_logs", "rayon_try_fold/logs"]
 
 [dependencies]
 rayon="*"
-rayon_try_fold = {git = "https://github.com/wagnerf42/rayon_try_fold.git"}
+rayon_try_fold = {git="https://github.com/wagnerf42/rayon_try_fold"}
+rayon_logs={optional=true, git="https://github.com/wagnerf42/rayon-logs"}
+jemallocator = "0.3.2"
+
+[[bench]]
+name="showdown"
+harness=false
+
+[dev_dependencies]
+criterion = "*"
+itertools = "*"
