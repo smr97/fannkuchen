@@ -3,7 +3,7 @@ use std::mem::replace;
 const MAX_N: usize = 16;
 
 /// Sequential implementation of fannkuchh
-pub fn fannkuchh_sequential(n: usize) -> (usize, usize) {
+pub fn fannkuchh_sequential(n: usize) -> (i32, i32) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 
@@ -53,7 +53,7 @@ pub fn fannkuchh_sequential(n: usize) -> (usize, usize) {
             // Make a copy of current_permutation[] to work on.
             let mut temp_permutation = current_permutation;
 
-            let mut flip_count: usize = 1;
+            let mut flip_count = 1;
 
             // Flip temp_permutation until the element at the
             // first_value index is 1 (0).
