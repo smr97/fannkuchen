@@ -1,3 +1,9 @@
+// Contributed by Cliff L. Biffle, translated from Jeremy Zerfas's C program.
+//
+// The C program was based on the Ada program by Jonathan Parker and Georg
+// Bauhaus which in turn was based on code by Dave Fladebo, Eckehard Berns,
+// Heiner Marxen, Hongwei Xi, and The Anh Tran and also the Java program by Oleg
+// Mazurov.
 use rayon::prelude::*;
 use std::mem::replace;
 // This value controls how many blocks the workload is broken up into (as long
