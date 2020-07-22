@@ -1,7 +1,7 @@
 # What
 This repository hosts several parallel implementations for the fannkuch_redux benchmark.
 The problem (`pancake flipping`) and its current state-of-the-art benchmark results are documented [here](https://benchmarksgame-team.pages.debian.net/benchmarksgame/performance/fannkuchredux.html).
-This repository uses the Rust #5 implementation originally contributed by Cliff Biffle. This code can be found (nearly) as-is in the file `fannkuchh_original.rs.
+This repository uses the Rust #5 implementation originally contributed by Cliff Biffle. This code can be found (nearly) as-is in the file `fannkuchh_original.rs`.
 
 # Why
 My aim is to compare the effects of a new task splitting scheduler on the scalability of this algorithm. It is a particularly good candidate becuase it is almost completely processor bound.
