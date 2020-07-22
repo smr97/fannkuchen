@@ -36,28 +36,9 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
         ),
     );
     c.bench(
-        "fannkuchh_redux_sequential",
+        "fannkuchh_redux_parallel",
         ParameterizedBenchmark::new(
-            "rayon fannkuchh",
-            |b, (n, nt)| {
-                b.iter_with_setup(
-                    || {
-                        let tp = rayon::ThreadPoolBuilder::new()
-                            .num_threads(*nt)
-                            .build()
-                            .expect("Couldn't build thread pool");
-                        tp
-                    },
-                    |tp| {
-                        tp.install(|| {
-                            fannkuchh_rayon(*n);
-                        });
-                    },
-                )
-            },
-            iproduct!(sizes.clone(), num_threads.clone()),
-        )
-        .with_function("adaptive fannkuchh", |b, (n, nt)| {
+            "adaptive fannkuchh", |b, (n, nt)| {
             b.iter_with_setup(
                 || {
                     let tp = rayon::ThreadPoolBuilder::new()
@@ -72,7 +53,25 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                     });
                 },
             )
-        })
+        },
+            iproduct!(sizes.clone(), num_threads.clone()),
+        )
+        //.with_function("adaptive fannkuchh", |b, (n, nt)| {
+        //    b.iter_with_setup(
+        //        || {
+        //            let tp = rayon::ThreadPoolBuilder::new()
+        //                .num_threads(*nt)
+        //                .build()
+        //                .expect("Couldn't build thread pool");
+        //            tp
+        //        },
+        //        |tp| {
+        //            tp.install(|| {
+        //                fannkuchh_adaptive(*n);
+        //            });
+        //        },
+        //    )
+        //})
         .with_function("original fannkuchh", |b, (n, nt)| {
             b.iter_with_setup(
                 || {
