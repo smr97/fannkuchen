@@ -15,7 +15,7 @@ const MAX_N: usize = 16;
 // threads steal blocks of work.
 // Within a block, it is much easier to generate next permutation given the current permutation,
 // owing to the "counts" optimisation.
-pub fn fannkuchh_fastest(n: usize, num_blocks: usize) -> (usize, usize) {
+pub fn fannkuchh_fastest(n: usize, num_blocks: usize) -> (i32, i32) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 
@@ -68,7 +68,7 @@ pub fn fannkuchh_fastest(n: usize, num_blocks: usize) -> (usize, usize) {
             }
 
             let mut max_flip_count = 0;
-            let mut checksum = 0;
+            let mut checksum = 0i32;
 
             // Iterate over each permutation in the block.
             let last_permutation_index = initial_permutation_index + block_size;
@@ -80,7 +80,7 @@ pub fn fannkuchh_fastest(n: usize, num_blocks: usize) -> (usize, usize) {
                     // Make a copy of current_permutation[] to work on.
                     let mut temp_permutation = current_permutation;
 
-                    let mut flip_count: usize = 1;
+                    let mut flip_count = 1;
 
                     // Flip temp_permutation until the element at the
                     // first_value index is 1 (0).

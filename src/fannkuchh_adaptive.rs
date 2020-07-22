@@ -6,8 +6,8 @@ const MAX_N: usize = 16;
 const MIN_BLOCKSIZE: usize = 2;
 
 struct PfannkuchhZustand {
-    max_flip_count: usize,
-    checksum: usize,
+    max_flip_count: i32,
+    checksum: i32,
     perm_range: Range<usize>,
     current_permutation: [u8; MAX_N],
     count: [usize; MAX_N],
@@ -64,7 +64,7 @@ impl Divisible for PfannkuchhZustand {
 }
 
 //Adaptively selects the block size
-pub fn fannkuchh_adaptive(n: usize) -> (usize, usize) {
+pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 
@@ -124,7 +124,7 @@ pub fn fannkuchh_adaptive(n: usize) -> (usize, usize) {
                     // Make a copy of current_permutation[] to work on.
                     let mut temp_permutation = state.current_permutation;
 
-                    let mut flip_count: usize = 1;
+                    let mut flip_count = 1;
 
                     // Flip temp_permutation until the element at the
                     // first_value index is 1 (0).

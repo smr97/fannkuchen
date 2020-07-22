@@ -60,15 +60,17 @@ fn main() {
         .num_threads(nt)
         .build()
         .expect("Couldn't build thread pool");
-    let (_, max_flip_count_0) = fannkuchh_fastest(n, 6 * nt);
+    let (checksum, max_flip_count_0) = fannkuchh_fastest(n, 6 * nt);
     let num_blocks = 6 * nt;
     let (_, max_flip_count_1) = fannkuchh_rayon(n);
-    let (_, max_flip_count_2) = fannkuchh_adaptive(n);
+    let (checksum_adaptive, max_flip_count_2) = fannkuchh_adaptive(n);
     let (_, max_flip_count_3) = fannkuchh_sequential(n);
     let mean_time_adaptive = bench_fannkuchen!(thread_pool, n, fannkuchh_adaptive);
     let mean_time_original = bench_fannkuchen!(thread_pool, n, num_blocks, fannkuchh_fastest);
     let mean_time_rayon = bench_fannkuchen!(thread_pool, n, fannkuchh_rayon);
     let mean_time_sequential = bench_fannkuchen!(thread_pool, n, fannkuchh_sequential);
+    println!("Checksum {}", checksum);
+    println!("Checksum Adaptive {}", checksum_adaptive);
     println!("Adaptive time {:?}", mean_time_adaptive);
     println!("Original time {:?}", mean_time_original);
     println!("Rayon time {:?}", mean_time_rayon);
