@@ -64,7 +64,7 @@ impl Divisible for PfannkuchhZustand {
 }
 
 //Adaptively selects the block size
-pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
+pub fn fannkuchh_adaptive(n: usize, blocksize: usize) -> (i32, i32) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
 
@@ -193,7 +193,7 @@ pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
             state.new = false;
         },
     )
-    .micro_block_sizes(100, 1_000) //TODO tune this by measuring startup cost vs total time.
+    .micro_block_sizes(blocksize, blocksize)
     .map(|zustand| (zustand.checksum, zustand.max_flip_count))
     .reduce(|| (0, 0), |l, r| (l.0 + r.0, l.1.max(r.1)))
 }

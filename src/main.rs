@@ -1,5 +1,3 @@
-#[global_allocator]
-static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 mod fannkuchh_adaptive;
 mod fannkuchh_original;
 mod fannkuchh_rayon;
