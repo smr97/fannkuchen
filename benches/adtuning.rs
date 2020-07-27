@@ -53,27 +53,6 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
             iproduct!(blocksizes.clone()),
         ),
     );
-    c.bench(
-        "N13",
-        ParameterizedBenchmark::new(
-            "adaptive",
-            |b, blocksize| {
-                b.iter_with_setup(
-                    || {
-                        let tp = rayon::ThreadPoolBuilder::new()
-                            .num_threads(1)
-                            .build()
-                            .expect("Couldn't build thread pool");
-                        tp
-                    },
-                    |tp| {
-                        tp.install(|| fannkuchh_adaptive(13, *blocksize));
-                    },
-                )
-            },
-            iproduct!(blocksizes.clone()),
-        ),
-    );
 }
 
 criterion_group! {
