@@ -1,12 +1,10 @@
-#[global_allocator]
-static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 #[macro_use]
 extern crate criterion;
 extern crate fannkuchen;
 #[macro_use]
 extern crate itertools;
 
-use fannkuchen::{fannkuchh_adaptive, fannkuchh_fastest, fannkuchh_sequential};
+use fannkuchen::{fannkuchh_adaptive, fannkuchh_fastest, fannkuchh_rayon, fannkuchh_sequential};
 use std::time::Duration;
 
 use criterion::{Criterion, ParameterizedBenchmark};
@@ -57,6 +55,22 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
             },
             iproduct!(sizes.clone(), num_threads.clone()),
         )
+        .with_function("original fannkuchh", |b, (n, nt)| {
+            b.iter_with_setup(
+                || {
+                    let tp = rayon::ThreadPoolBuilder::new()
+                        .num_threads(*nt)
+                        .build()
+                        .expect("Couldn't build thread pool");
+                    tp
+                },
+                |tp| {
+                    tp.install(|| {
+                        fannkuchh_rayon(*n);
+                    });
+                },
+            )
+        })
         .with_function("original fannkuchh", |b, (n, nt)| {
             b.iter_with_setup(
                 || {
