@@ -10,17 +10,16 @@ use std::time::Duration;
 use criterion::{Criterion, ParameterizedBenchmark};
 
 fn fannkuchh_benchmarks(c: &mut Criterion) {
-    let num_threads: Vec<_> = vec![4, 11, 32, 43, 64];
     let blocksizes: Vec<_> = vec![10, 100, 1000, 10_000, 100_000];
     c.bench(
         "N11",
         ParameterizedBenchmark::new(
             "adaptive",
-            |b, (nt, blocksize)| {
+            |b, blocksize| {
                 b.iter_with_setup(
                     || {
                         let tp = rayon::ThreadPoolBuilder::new()
-                            .num_threads(*nt)
+                            .num_threads(1)
                             .build()
                             .expect("Couldn't build thread pool");
                         tp
@@ -30,18 +29,18 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                     },
                 )
             },
-            iproduct!(num_threads.clone(), blocksizes.clone()),
+            iproduct!(blocksizes.clone()),
         ),
     );
     c.bench(
         "N12",
         ParameterizedBenchmark::new(
             "adaptive",
-            |b, (nt, blocksize)| {
+            |b, blocksize| {
                 b.iter_with_setup(
                     || {
                         let tp = rayon::ThreadPoolBuilder::new()
-                            .num_threads(*nt)
+                            .num_threads(1)
                             .build()
                             .expect("Couldn't build thread pool");
                         tp
@@ -51,18 +50,18 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                     },
                 )
             },
-            iproduct!(num_threads.clone(), blocksizes.clone()),
+            iproduct!(blocksizes.clone()),
         ),
     );
     c.bench(
         "N13",
         ParameterizedBenchmark::new(
             "adaptive",
-            |b, (nt, blocksize)| {
+            |b, blocksize| {
                 b.iter_with_setup(
                     || {
                         let tp = rayon::ThreadPoolBuilder::new()
-                            .num_threads(*nt)
+                            .num_threads(1)
                             .build()
                             .expect("Couldn't build thread pool");
                         tp
@@ -72,7 +71,7 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                     },
                 )
             },
-            iproduct!(num_threads.clone(), blocksizes.clone()),
+            iproduct!(blocksizes.clone()),
         ),
     );
 }
