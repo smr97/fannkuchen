@@ -89,7 +89,10 @@ pub fn fannkuchh_rayon(n: usize) -> (i32, i32) {
     .work(
         |state| state.perm_range.len() == 0,
         |state, limit| {
-            let right_end = min(state.perm_range.end, state.perm_range.start + limit);
+            let right_end = min(
+                state.perm_range.end,
+                state.perm_range.start.saturating_add(limit),
+            );
             let dieser_range = state.perm_range.start..right_end;
             let initial_permutation_index = dieser_range.start;
 
@@ -192,6 +195,7 @@ pub fn fannkuchh_rayon(n: usize) -> (i32, i32) {
             state.new = false;
         },
     )
+    .depjoin()
     .rayon(rayon::current_num_threads())
     .map(|zustand| (zustand.checksum, zustand.max_flip_count))
     .reduce(|| (0, 0), |l, r| (l.0 + r.0, l.1.max(r.1)))

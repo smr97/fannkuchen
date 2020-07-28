@@ -1,43 +1,40 @@
 #[macro_use]
 extern crate criterion;
 extern crate fannkuchen;
-#[macro_use]
-extern crate itertools;
 
 use fannkuchen::{fannkuchh_adaptive, fannkuchh_fastest, fannkuchh_rayon, fannkuchh_sequential};
 use std::time::Duration;
 
-use criterion::{Criterion, ParameterizedBenchmark};
+use criterion::{Benchmark, Criterion, ParameterizedBenchmark};
+const SIZE: usize = 13;
 
 fn fannkuchh_benchmarks(c: &mut Criterion) {
-    let sizes: Vec<_> = vec![11, 12, 13];
-    let num_threads: Vec<_> = (1..64).filter(|nt| nt % 2 == 0).collect();
+    let num_threads: Vec<_> = std::iter::once(2)
+        .chain((1..33).filter(|nt| nt % 4 == 0))
+        .chain((33..65).filter(|nt| nt % 2 == 0))
+        .collect();
     c.bench(
         "fannkuchh_redux_sequential",
-        ParameterizedBenchmark::new(
-            "sequential fannkuchh",
-            |b, n| {
-                b.iter_with_setup(
-                    || {
-                        let tp = rayon::ThreadPoolBuilder::new()
-                            .num_threads(1)
-                            .build()
-                            .expect("Couldn't build thread pool");
-                        tp
-                    },
-                    |tp| {
-                        tp.install(|| fannkuchh_sequential(*n));
-                    },
-                )
-            },
-            sizes.clone(),
-        ),
+        Benchmark::new("sequential fannkuchh", |b| {
+            b.iter_with_setup(
+                || {
+                    let tp = rayon::ThreadPoolBuilder::new()
+                        .num_threads(1)
+                        .build()
+                        .expect("Couldn't build thread pool");
+                    tp
+                },
+                |tp| {
+                    tp.install(|| fannkuchh_sequential(SIZE));
+                },
+            )
+        }),
     );
     c.bench(
         "fannkuchh_redux_parallel",
         ParameterizedBenchmark::new(
             "adaptive fannkuchh",
-            |b, (n, nt)| {
+            |b, nt| {
                 b.iter_with_setup(
                     || {
                         let tp = rayon::ThreadPoolBuilder::new()
@@ -48,14 +45,14 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                     },
                     |tp| {
                         tp.install(|| {
-                            fannkuchh_adaptive(*n);
+                            fannkuchh_adaptive(SIZE);
                         });
                     },
                 )
             },
-            iproduct!(sizes.clone(), num_threads.clone()),
+            num_threads.clone(),
         )
-        .with_function("original fannkuchh", |b, (n, nt)| {
+        .with_function("rayon fannkuchh", |b, nt| {
             b.iter_with_setup(
                 || {
                     let tp = rayon::ThreadPoolBuilder::new()
@@ -66,12 +63,12 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                 },
                 |tp| {
                     tp.install(|| {
-                        fannkuchh_rayon(*n);
+                        fannkuchh_rayon(SIZE);
                     });
                 },
             )
         })
-        .with_function("original fannkuchh", |b, (n, nt)| {
+        .with_function("static fannkuchh", |b, nt| {
             b.iter_with_setup(
                 || {
                     let tp = rayon::ThreadPoolBuilder::new()
@@ -82,7 +79,7 @@ fn fannkuchh_benchmarks(c: &mut Criterion) {
                 },
                 |tp| {
                     tp.install(|| {
-                        fannkuchh_fastest(*n, 10 * nt);
+                        fannkuchh_fastest(SIZE, 10 * nt);
                     });
                 },
             )

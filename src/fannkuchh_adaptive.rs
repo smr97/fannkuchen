@@ -90,7 +90,10 @@ pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
     .work(
         |state| state.perm_range.len() == 0,
         |state, limit| {
-            let right_end = min(state.perm_range.end, state.perm_range.start + limit);
+            let right_end = min(
+                state.perm_range.end,
+                state.perm_range.start.saturating_add(limit),
+            );
             let dieser_range = state.perm_range.start..right_end;
             let initial_permutation_index = dieser_range.start;
 
