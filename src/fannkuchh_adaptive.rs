@@ -193,7 +193,7 @@ pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
             state.new = false;
         },
     )
-    .micro_block_sizes(10, 1_000)
+    .micro_block_sizes(100, 10_000)
     .map(|zustand| (zustand.checksum, zustand.max_flip_count))
     .reduce(|| (0, 0), |l, r| (l.0 + r.0, l.1.max(r.1)))
 }
