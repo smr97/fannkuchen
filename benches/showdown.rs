@@ -6,7 +6,7 @@ use fannkuchen::{fannkuchh_adaptive, fannkuchh_fastest, fannkuchh_rayon, fannkuc
 use std::time::Duration;
 
 use criterion::{Benchmark, Criterion, ParameterizedBenchmark};
-const SIZE: usize = 13;
+const SIZE: usize = 12;
 
 fn fannkuchh_benchmarks(c: &mut Criterion) {
     let num_threads: Vec<_> = std::iter::once(2)
