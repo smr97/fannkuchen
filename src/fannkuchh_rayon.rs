@@ -63,6 +63,11 @@ impl Divisible for PfannkuchhZustand {
     }
 }
 
+// return rayon's initial counter for a given number of threads
+fn log(t: usize) -> usize {
+    (t as f64).log2().ceil() as usize + 1
+}
+
 pub fn fannkuchh_rayon(n: usize) -> (i32, i32) {
     // This assert eliminates several bounds checks.
     assert!(n < MAX_N);
@@ -196,7 +201,7 @@ pub fn fannkuchh_rayon(n: usize) -> (i32, i32) {
         },
     )
     .depjoin()
-    .rayon(rayon::current_num_threads())
+    .rayon(log(rayon::current_num_threads()))
     .map(|zustand| (zustand.checksum, zustand.max_flip_count))
     .reduce(|| (0, 0), |l, r| (l.0 + r.0, l.1.max(r.1)))
 }
