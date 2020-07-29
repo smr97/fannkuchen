@@ -3,7 +3,7 @@ use std::{cmp::min, mem::replace, ops::Range};
 
 // One greater than the maximum `n` value. Used to size stack arrays.
 const MAX_N: usize = 16;
-const MIN_BLOCKSIZE: usize = 2;
+const MIN_BLOCKSIZE: usize = 10;
 
 struct PfannkuchhZustand {
     max_flip_count: i32,
@@ -90,10 +90,7 @@ pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
     .work(
         |state| state.perm_range.len() == 0,
         |state, limit| {
-            let right_end = min(
-                state.perm_range.end,
-                state.perm_range.start.saturating_add(limit),
-            );
+            let right_end = min(state.perm_range.end, state.perm_range.start + limit);
             let dieser_range = state.perm_range.start..right_end;
             let initial_permutation_index = dieser_range.start;
 
@@ -196,7 +193,7 @@ pub fn fannkuchh_adaptive(n: usize) -> (i32, i32) {
             state.new = false;
         },
     )
-    .micro_block_sizes(1, 1_000)
+    .micro_block_sizes(10, 1_000)
     .map(|zustand| (zustand.checksum, zustand.max_flip_count))
     .reduce(|| (0, 0), |l, r| (l.0 + r.0, l.1.max(r.1)))
 }
