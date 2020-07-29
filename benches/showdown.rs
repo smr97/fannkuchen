@@ -9,10 +9,7 @@ use criterion::{Benchmark, Criterion, ParameterizedBenchmark};
 const SIZE: usize = 12;
 
 fn fannkuchh_benchmarks(c: &mut Criterion) {
-    let num_threads: Vec<_> = std::iter::once(2)
-        .chain((1..33).filter(|nt| nt % 4 == 0))
-        .chain((33..65).filter(|nt| nt % 2 == 0))
-        .collect();
+    let num_threads: Vec<_> = (2..65).filter(|nt| nt % 2 == 0).collect();
     c.bench(
         "fannkuchh_redux_sequential",
         Benchmark::new("sequential fannkuchh", |b| {
