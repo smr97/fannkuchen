@@ -1,4 +1,4 @@
-use rayon_try_fold::prelude::*;
+use kvik::prelude::*;
 use std::{cmp::min, mem::replace, ops::Range};
 
 // One greater than the maximum `n` value. Used to size stack arrays.
